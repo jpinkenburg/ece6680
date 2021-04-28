@@ -119,6 +119,7 @@ def get_positions(modArray):
   return poses
 
 #also try setting a limit on how much force the motors can exert
+#make plot with force as well
 t = 0
 
 def make_graph(pos,title="",fname=""):
