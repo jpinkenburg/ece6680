@@ -9,7 +9,7 @@ p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD)
 
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 planeId = p.loadURDF("plane.urdf", [0,0,0])
-p.setGravity(0,0,0)
+p.setGravity(0,0,-10)
 arm_height = 5
 arm_width = 1
 arm_length = 4
@@ -29,10 +29,10 @@ p.changeVisualShape(mod4,-1,rgbaColor=[0,0,1,1])
 
 corrFac = 0.05
 bodyId = p.loadURDF("body.urdf", [0,0,2.5])
-armId1 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.1, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId2 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.1, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId3 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.1, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId4 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.1, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
+armId1 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.1, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0.2, useFaceContact=1)
+armId2 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.1, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0.2, useFaceContact=1)
+armId3 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.1, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0.2, useFaceContact=1)
+armId4 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.1, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0.2, useFaceContact=1)
 
 p.changeVisualShape(bodyId,-1,rgbaColor=[160/255,69/255,19/255,1])
 p.changeVisualShape(armId1,-1,rgbaColor=[0,0,0,0.8])
@@ -137,25 +137,42 @@ def get_positions(modArray):
   return poses
 
 #probably need to calculate minimum force to get some sort of meaningful object avoidance
+#Try comparing PID controller to other thing
 
 forces = np.zeros([1,4,3])
+global intErr,prevErr,kp,ki,kd 
 
-#Trying different kinds of forces
+intErr= np.zeros([1,4,3])
+prevErr = np.zeros([1,4,3])
+kp,ki,kd = [100,0.5,0]
 
-exp = lambda cur,des,scale : np.sign(des-cur)*np.exp(des-cur)
-exp_x = lambda cur,des,scale : [np.sign(des[0]-cur[0])*np.exp(des[0]-cur[0]),0,0]
-poly = lambda cur,des,pwr: np.power(np.sign(des-cur),pwr+1)*np.power(des-cur,pwr)
+def pid(desPos,curPos):
+  global intErr,prevErr
+  if len(curPos.shape) == 3:
+    curPos = curPos[0]
+  err = desPos-curPos
+  intErr += err*tstep
+  dErr = (err-prevErr)/tstep
+  prevErr = err
+  f = kp*err + ki*intErr + kd*dErr
+  print(f.shape)
+  for i in range(4):
+    f[0,i,2] = 0.
+    if f[0,i,0] > 200:
+      f[0,i,0] = 200
+    p.applyExternalForce(modArr[i],-1,f[0,i],[0,0,0],p.LINK_FRAME)
+  return f
 
-
-#try introducing disturbances!
+j=0
 while 1:
   try:
     poses = get_positions(modArr)
     #f=control_prop_x(modArr,poses,des,50
-    f = apply_forces(modArr,poses,des,poly,4)
-    des[:,0] += tstep*30 #10 units/sec
+    pid(des,poses)
+    print(poses)
+    des[:,0] += tstep*50 #10 units/sec
     posArr = np.append(posArr,poses,0)
-    forces = np.append(forces,f,0)
+    #forces = np.append(forces,f,0)
     p.stepSimulation()
     sleep(1/100.)
 
@@ -171,10 +188,13 @@ while 1:
     #plt.title("
     plt.savefig("yee.png")
 
-    plt.figure()
-    plt.plot(np.arange(forces.shape[0]),forces[:,2,1])
-    plt.xlabel("step num")
-    plt.ylabel("Applied X force")
+    #plt.figure()
+    #plt.plot(np.arange(forces.shape[0]),forces[:,2,1])
+    #plt.xlabel("step num")
+    #plt.ylabel("Applied X force")
     
     plt.show()
     raise(EOFError)
+
+#diagonal lines means that the robot is achieving liftoff!! :/
+#goes through the plane??
