@@ -1,5 +1,5 @@
 import pybullet as p
-from time import sleep
+import time
 import pybullet_data
 import numpy as np
 import matplotlib.pyplot as plt
@@ -97,6 +97,7 @@ sens_dist = 20 # obstacle sensing distance
 sens_width = 1 # obstacle sensing width
 obs_coeff = 200 # obstacle avoidance coeffiecient
 limb_coeff = 100 # limb-spacing mantaining coefficient
+comm_delay = 0.02 # round-trip communication delay, in sec
 
 # velocity control function
 def vel_ctrl(body, vel):
@@ -168,17 +169,17 @@ def ctrl_dec(body, vel):
 
 # centralized velocity control function
 def ctrl_cen(vel):
-    pos,ort = p.getBasePositionAndOrientation(bodyId)
-    lin_vel,ang_vel = p.getBaseVelocity(bodyId)
     obstacle_pos,obstacle_ort = p.getBasePositionAndOrientation(obs)
-    obstacle_dist_x = obstacle_pos[0]-(pos[0]+body_length/2+arm_length)
+    pos,ort = p.getBasePositionAndOrientation(bodyId)
+    y_vel = vel[1]
+    # avoid objects
+    obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5+body_length/2+arm_length)
     obstacle_dist_y = obstacle_pos[1]-pos[1]
-    if (obstacle_dist_x<20 and obstacle_dist_x>0) and (obstacle_dist_y>-body_width/2 and obstacle_dist_y<0): # check for detectable object on left side of vehicle
-        y_vel = -1.5*lin_vel[0]*(body_width/2)/(5)
-    elif (obstacle_dist_x<20 and obstacle_dist_x>0) and (obstacle_dist_y>0 and obstacle_dist_y<body_width/2): # check for detectable object on right side of vehicle
-        y_vel = -1.5*lin_vel[0]*(body_width/2)/(5)
-    else:
-        y_vel = -2.5*(pos[1])
+    if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
+        if (obstacle_dist_y<body_width/2+sens_width/2 and obstacle_dist_y>0):
+            y_vel -= obs_coeff/obstacle_dist_x
+        elif (obstacle_dist_y>-body_width/2-sens_width/2 and obstacle_dist_y<0):
+            y_vel -= obs_coeff/obstacle_dist_x
     vel = [vel[0],y_vel,vel[2]]
     for body in [mod1, mod2, mod3, mod4]:
         vel_ctrl(body, vel)
@@ -193,12 +194,16 @@ posArr2 = []
 posArr3 = []
 posArr4 = []
 
-mode = "dec" # choose whether to use centralized or decentralized control
-target_vel = (60,0,0) # target velocity x,y,z
+mode = "cen" # choose whether to use centralized or decentralized control
+target_vel = (75,0,0) # target velocity x,y,z
+start = time.time()
 while 1:
   try:
     if mode == "cen":
-        ctrl_cen(target_vel)
+        #ctrl_cen(target_vel)
+        if time.time()-start > comm_delay:
+            ctrl_cen(target_vel)
+            start = time.time()
     elif mode == "dec":
         ctrl_dec(mod1, target_vel)
         ctrl_dec(mod2, target_vel)
