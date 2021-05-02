@@ -90,17 +90,6 @@ p.changeVisualShape(obs,-1,rgbaColor=[0,0,0,1])
 numLinks = p.getMeshData(armId1)
 pos,ort = p.getBasePositionAndOrientation(armId1)
 
-
-# run simulation
-useRealTimeSimulation = 0
-if (useRealTimeSimulation):
-  p.setRealTimeSimulation(0)
-
-posArr1 = []
-posArr2 = []
-posArr3 = []
-posArr4 = []
-
 # control parameters
 x_vel_coeff = 5 # x velocity control coefficient
 y_vel_coeff = 100 # y velocity control coefficient
@@ -193,6 +182,16 @@ def ctrl_cen(vel):
     vel = [vel[0],y_vel,vel[2]]
     for body in [mod1, mod2, mod3, mod4]:
         vel_ctrl(body, vel)
+
+# run simulation
+useRealTimeSimulation = 0
+if (useRealTimeSimulation):
+  p.setRealTimeSimulation(0)
+
+posArr1 = []
+posArr2 = []
+posArr3 = []
+posArr4 = []
 
 mode = "dec" # choose whether to use centralized or decentralized control
 target_vel = (60,0,0) # target velocity x,y,z
