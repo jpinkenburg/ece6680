@@ -83,7 +83,7 @@ p.createSoftBodyAnchor(armId4,16,mod4,-1)
 p.createSoftBodyAnchor(armId4,17,mod4,-1)
 
 # create obstacle
-obstacle_pos = (40,1,0.5) # position of obstacle to avoid
+obstacle_pos = (40,0,0.5) # position of obstacle to avoid
 obs = p.loadURDF("cube_small.urdf",basePosition=obstacle_pos,globalScaling=10)
 p.changeVisualShape(obs,-1,rgbaColor=[0,0,0,1])
 
@@ -104,9 +104,9 @@ posArr4 = []
 # control parameters
 x_vel_coeff = 5 # x velocity control coefficient
 y_vel_coeff = 100 # y velocity control coefficient
-sens_dist = 15 # obstacle sensing distance
+sens_dist = 20 # obstacle sensing distance
 sens_width = 1 # obstacle sensing width
-obs_coeff = 100 # obstacle avoidance coeffiecient
+obs_coeff = 200 # obstacle avoidance coeffiecient
 limb_coeff = 100 # limb-spacing mantaining coefficient
 
 # velocity control function
@@ -130,7 +130,7 @@ def ctrl_dec(body, vel):
         # avoid objects
         obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5)
         obstacle_dist_y = obstacle_pos[1]-pos[1]
-        if (obstacle_dist_y<0.5+sens_width/2 and obstacle_dist_y>(0.5-body_width/2)-sens_width/2):
+        if (obstacle_dist_y<0.5+sens_width/2 and obstacle_dist_y>(0.5-body_width/2)):
             if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
                 y_vel -= obs_coeff/obstacle_dist_x
         else:
@@ -142,7 +142,7 @@ def ctrl_dec(body, vel):
         # avoid objects
         obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5)
         obstacle_dist_y = obstacle_pos[1]-pos[1]
-        if (obstacle_dist_y>-0.5-sens_width/2 and obstacle_dist_y<(body_width/2-0.5)+sens_width/2):
+        if (obstacle_dist_y>-0.5-sens_width/2 and obstacle_dist_y<(body_width/2-0.5)):
             if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
                 y_vel += obs_coeff/obstacle_dist_x
         else:
@@ -154,7 +154,7 @@ def ctrl_dec(body, vel):
         # avoid objects
         obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5)
         obstacle_dist_y = obstacle_pos[1]-pos[1]
-        if (obstacle_dist_y<0.5+sens_width/2 and obstacle_dist_y>(0.5-body_width/2)-sens_width/2):
+        if (obstacle_dist_y<0.5+sens_width/2 and obstacle_dist_y>(0.5-body_width/2)):
             if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
                 y_vel -= obs_coeff/obstacle_dist_x
         else:
@@ -166,7 +166,7 @@ def ctrl_dec(body, vel):
         # avoid objects
         obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5)
         obstacle_dist_y = obstacle_pos[1]-pos[1]
-        if (obstacle_dist_y>-0.5-sens_width/2 and obstacle_dist_y<(body_width/2-0.5)+sens_width/2):
+        if (obstacle_dist_y>-0.5-sens_width/2 and obstacle_dist_y<(body_width/2-0.5)):
             if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
                 y_vel += obs_coeff/obstacle_dist_x
         else:
