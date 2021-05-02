@@ -82,6 +82,10 @@ p.createSoftBodyAnchor(armId4,8,mod4,-1)
 p.createSoftBodyAnchor(armId4,16,mod4,-1)
 p.createSoftBodyAnchor(armId4,17,mod4,-1)
 
+# create obstacle
+obstacle_pos = (40,1,0.5) # position of obstacle to avoid
+obs = p.loadURDF("cube_small.urdf",basePosition=obstacle_pos,globalScaling=10)
+p.changeVisualShape(obs,-1,rgbaColor=[0,0,0,1])
 
 numLinks = p.getMeshData(armId1)
 pos,ort = p.getBasePositionAndOrientation(armId1)
@@ -97,46 +101,110 @@ posArr2 = []
 posArr3 = []
 posArr4 = []
 
-# decentralized velocity control function
-def vel_ctrl_dec(body, vel):
-    lin_vel,ang_vel = p.getBaseVelocity(body)
-    force1 = [(vel[0]-lin_vel[0]) - 10*(vel[1]-lin_vel[1]), 0, 0]
-    force2 = [(vel[0]-lin_vel[0]) + 10*(vel[1]-lin_vel[1]), 0, 0]
-    p.applyExternalForce(body,-1,force1,[0,1/4,0],p.LINK_FRAME)
-    p.applyExternalForce(body,-1,force2,[0,-1/4,0],p.LINK_FRAME)
+# control parameters
+x_vel_coeff = 5 # x velocity control coefficient
+y_vel_coeff = 100 # y velocity control coefficient
+sens_dist = 15 # obstacle sensing distance
+sens_width = 1 # obstacle sensing width
+obs_coeff = 100 # obstacle avoidance coeffiecient
+limb_coeff = 100 # limb-spacing mantaining coefficient
 
-# centralized velocity control function
-def vel_ctrl_cen(vel):
-    pos,ort = p.getBasePositionAndOrientation(bodyId)
-    obstacle_dist_x = obstacle_pos[0]-body_length/2-arm_length-pos[0]
-    obstacle_dist_y = obstacle_pos[1]-pos[1]
-    if (obstacle_dist_x<5 and obstacle_dist_x>0) and (obstacle_dist_y>-body_width/2 and obstacle_dist_y<0): # check for detectable object on left side of vehicle
-        y_vel = vel[0]*(obstacle_dist_y-body_width/2)/(obstacle_dist_x-body_length/2-arm_length)
-    elif (obstacle_dist_x<5 and obstacle_dist_x>0) and (obstacle_dist_y>0 and obstacle_dist_y<body_width/2): # check for detectable object on right side of vehicle
-        y_vel = vel[0]*(obstacle_dist_y+body_width/2)/(obstacle_dist_x-body_length/2-arm_length)
-    else:
-        y_vel = -5*(pos[1])
-    vel = [vel[0],y_vel,vel[2]]
-    for body in [mod1, mod2, mod3, mod4]:
-        lin_vel,ang_vel = p.getBaseVelocity(body)
-        force1 = [(vel[0]-lin_vel[0]) - 10*(vel[1]-lin_vel[1]), 0, 0]
-        force2 = [(vel[0]-lin_vel[0]) + 10*(vel[1]-lin_vel[1]), 0, 0]
+# velocity control function
+def vel_ctrl(body, vel):
+    lin_vel,ang_vel = p.getBaseVelocity(body)
+    force1 = [x_vel_coeff*(vel[0]-lin_vel[0]) - y_vel_coeff*(vel[1]-lin_vel[1]), 0, 0]
+    force2 = [x_vel_coeff*(vel[0]-lin_vel[0]) + y_vel_coeff*(vel[1]-lin_vel[1]), 0, 0]
+    if (body == mod1 or body == mod2):
         p.applyExternalForce(body,-1,force1,[0,1/4,0],p.LINK_FRAME)
         p.applyExternalForce(body,-1,force2,[0,-1/4,0],p.LINK_FRAME)
-    sleep(0.02) # model communication delay
+    elif (body == mod3 or body == mod4):
+        p.applyExternalForce(body,-1,force1,[0,-1/4,0],p.LINK_FRAME)
+        p.applyExternalForce(body,-1,force2,[0,1/4,0],p.LINK_FRAME)
 
-mode = "decentralized" # choose whether to use centralized or decentralized control
-target_vel = (50,0,0) # target velocity x,y,z
-obstacle_pos = (20,1,0) # position of obstacle to avoid
+# decentralized velocity control function
+def ctrl_dec(body, vel):
+    obstacle_pos,obstacle_ort = p.getBasePositionAndOrientation(obs)
+    pos,ort = p.getBasePositionAndOrientation(body)
+    y_vel = vel[1]
+    if (body == mod1):
+        # avoid objects
+        obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5)
+        obstacle_dist_y = obstacle_pos[1]-pos[1]
+        if (obstacle_dist_y<0.5+sens_width/2 and obstacle_dist_y>(0.5-body_width/2)-sens_width/2):
+            if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
+                y_vel -= obs_coeff/obstacle_dist_x
+        else:
+            # maintain limb spacing
+            arm_pos,arm_ort = p.getBasePositionAndOrientation(mod2)
+            arm_dist = arm_pos[1] - pos[1] + (body_width-1)
+            y_vel += limb_coeff*arm_dist
+    elif (body == mod2):
+        # avoid objects
+        obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5)
+        obstacle_dist_y = obstacle_pos[1]-pos[1]
+        if (obstacle_dist_y>-0.5-sens_width/2 and obstacle_dist_y<(body_width/2-0.5)+sens_width/2):
+            if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
+                y_vel += obs_coeff/obstacle_dist_x
+        else:
+            # maintain limb spacing
+            arm_pos,arm_ort = p.getBasePositionAndOrientation(mod1)
+            arm_dist = arm_pos[1] - pos[1] - (body_width-1)
+            y_vel += limb_coeff*arm_dist
+    elif (body == mod3):
+        # avoid objects
+        obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5)
+        obstacle_dist_y = obstacle_pos[1]-pos[1]
+        if (obstacle_dist_y<0.5+sens_width/2 and obstacle_dist_y>(0.5-body_width/2)-sens_width/2):
+            if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
+                y_vel -= obs_coeff/obstacle_dist_x
+        else:
+            # maintain limb spacing
+            arm_pos,arm_ort = p.getBasePositionAndOrientation(mod4)
+            arm_dist = arm_pos[1] - pos[1] + (body_width-1)
+            y_vel += limb_coeff*arm_dist
+    elif (body == mod4):
+        # avoid objects
+        obstacle_dist_x = obstacle_pos[0]-(pos[0]+0.5)
+        obstacle_dist_y = obstacle_pos[1]-pos[1]
+        if (obstacle_dist_y>-0.5-sens_width/2 and obstacle_dist_y<(body_width/2-0.5)+sens_width/2):
+            if (obstacle_dist_x<sens_dist and obstacle_dist_x>0):
+                y_vel += obs_coeff/obstacle_dist_x
+        else:
+            # maintain limb spacing
+            arm_pos,arm_ort = p.getBasePositionAndOrientation(mod3)
+            arm_dist = arm_pos[1] - pos[1] - (body_width-1)
+            y_vel += limb_coeff*arm_dist
+    vel = [vel[0],y_vel,vel[2]]
+    vel_ctrl(body, vel)
+
+# centralized velocity control function
+def ctrl_cen(vel):
+    pos,ort = p.getBasePositionAndOrientation(bodyId)
+    lin_vel,ang_vel = p.getBaseVelocity(bodyId)
+    obstacle_pos,obstacle_ort = p.getBasePositionAndOrientation(obs)
+    obstacle_dist_x = obstacle_pos[0]-(pos[0]+body_length/2+arm_length)
+    obstacle_dist_y = obstacle_pos[1]-pos[1]
+    if (obstacle_dist_x<20 and obstacle_dist_x>0) and (obstacle_dist_y>-body_width/2 and obstacle_dist_y<0): # check for detectable object on left side of vehicle
+        y_vel = -1.5*lin_vel[0]*(body_width/2)/(5)
+    elif (obstacle_dist_x<20 and obstacle_dist_x>0) and (obstacle_dist_y>0 and obstacle_dist_y<body_width/2): # check for detectable object on right side of vehicle
+        y_vel = -1.5*lin_vel[0]*(body_width/2)/(5)
+    else:
+        y_vel = -2.5*(pos[1])
+    vel = [vel[0],y_vel,vel[2]]
+    for body in [mod1, mod2, mod3, mod4]:
+        vel_ctrl(body, vel)
+
+mode = "dec" # choose whether to use centralized or decentralized control
+target_vel = (60,0,0) # target velocity x,y,z
 while 1:
   try:
-    if mode == "centralized":
-        vel_ctrl_cen(target_vel)
-    elif mode == "decentralized":
-        vel_ctrl_dec(mod1, target_vel)
-        vel_ctrl_dec(mod2, target_vel)
-        vel_ctrl_dec(mod3, target_vel)
-        vel_ctrl_dec(mod4, target_vel)
+    if mode == "cen":
+        ctrl_cen(target_vel)
+    elif mode == "dec":
+        ctrl_dec(mod1, target_vel)
+        ctrl_dec(mod2, target_vel)
+        ctrl_dec(mod3, target_vel)
+        ctrl_dec(mod4, target_vel)
 
     pos1,ort = p.getBasePositionAndOrientation(mod1)
     pos2,ort = p.getBasePositionAndOrientation(mod2)
