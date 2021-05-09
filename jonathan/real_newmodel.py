@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-physicsClient = p.connect(p.GUI)
+physicsClient = p.connect(p.DIRECT)
 p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD)
 
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -113,19 +113,19 @@ velArr4 = []
 mods = [mod1,mod2,mod3,mod4]
 
 # Control related variables
-k_p = 1 # Proportional constant
-k_i = 0#.5 # Integral constant
-k_d = 0#.01 # Differential constant
+k_p = 10 # Proportional constant
+k_i = 0.5 # Integral constant
+k_d = .01 # Differential constant
 # goal_vel_x = [0,0,0,0] # Velocity goal of each wheel
 goal_vel_x = [25,25,25,25] # Velocity goal of each wheel
-goal_pos_y = [1,-1,1,-1] # Position goal of each wheel
+goal_pos_y = [0.0833,-0.0833,0.0833,-0.0833] # Position goal of each wheel
 # goal_pos_y = [0,0,0,0] # Velocity goal of each wheel
 lastControlTime = 0
 # target_vel = (50,10,0)
 # turns = 1
 control_x_prev = [0,0,0,0]
 # control_y_prev = [0,0,0,0]
-control_y_prev = [1,-1,1,-1]
+control_y_prev = [0.0833,-0.0833,0.0833,-0.0833]
 error_x_prev = [0,0,0,0]
 error_y_prev = [0,0,0,0]
 time_prev = time.time()
@@ -137,9 +137,10 @@ time_prev = time.time()
 start_time = time.time()
 store_data_time = time.time()
 modArr = [mod1,mod2,mod3,mod4]
-#for i in range(4):
-#  print(p.getBasePositionAndOrientation(modArr[i]))
-while time.time() - start_time < 20:
+for i in range(4):
+  print(p.getBasePositionAndOrientation(modArr[i]))
+#raise(ArithmeticError)
+while time.time() - start_time < 10:
   time.sleep(1./100.)
   try:
     # print(turns)
@@ -203,7 +204,7 @@ while time.time() - start_time < 20:
       control_y = []
       for i in range(4):
         error = pos_y[i] - goal_pos_y[i]
-        P = k_p * error
+        P = k_p * error * 0.8
         I = control_y_prev[i] + k_i * error * (time.time() - time_prev)
         D = k_d * (error - error_y_prev[i]) / (time.time() - time_prev)
         control_y.append(-P-D)
@@ -219,8 +220,8 @@ while time.time() - start_time < 20:
       for i in range(4):
         # p.applyExternalForce(mods[i],-1,[control_x[i],control_y[i],0],[0,0,0],p.LINK_FRAME)
 
-        #p.applyExternalForce(mods[i],-1,np.array([control_x[i] + control_y[i]/3,0,0])/20,[0,-1/4,0],p.LINK_FRAME)
-        #p.applyExternalForce(mods[i],-1,np.array([control_x[i] - control_y[i]/3,0,0])/20,[0,1/4,0],p.LINK_FRAME)
+        p.applyExternalForce(mods[i],-1,np.array([control_x[i] + control_y[i]/3,0,0]),[0,-1/4,0],p.LINK_FRAME)
+        p.applyExternalForce(mods[i],-1,np.array([control_x[i] - control_y[i]/3,0,0]),[0,1/4,0],p.LINK_FRAME)
         
 
         # if i == 1 or i == 2:
