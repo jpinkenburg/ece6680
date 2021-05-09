@@ -304,26 +304,9 @@ for i in range(4):
   ax1.scatter(masterArr[0,0,i],masterArr[0,1,i],color='black')
 ax1.legend()
 for i in range(4):
-  ax2.plot(np.linspace(1, len(velArr1), num=len(velArr1)), masterArr2[:,i],color=colors[i], label=label[i])
+  ax2.plot(np.linspace(0, 10, num=len(velArr1)), masterArr2[:,i],color=colors[i], label=label[i])
 ax1.set(xlabel='x position (m)', ylabel='y position (m)')
 ax2.set(xlabel='time (s)', ylabel='x velocity (m/s)')
 ax2.legend()
 plt.show()
 # raise(EOFError)
-
-
-# f = plt.figure(1)
-# for i in range(4):
-#   plt.plot(masterArr[:,0,i],masterArr[:,1,i],color=colors[i])
-#   plt.scatter(masterArr[0,0,i],masterArr[0,1,i],color='black')
-# plt.xlabel('x position (m)')
-# plt.ylabel('y position (m)')
-# # plt.set(xlabel='x position (m)', ylabel='y position (m)')
-
-# g = plt.figure(2)
-# for i in range(4):
-#   plt.plot(np.linspace(1, len(velArr1), num=len(velArr1)), masterArr2[:,i],color=colors[i])
-# plt.xlabel('time (s)')
-# plt.ylabel('x velocity (m/s)')
-# # plt.set(xlabel='time (s)', ylabel='x velocity (m/s)')
-# plt.show()
