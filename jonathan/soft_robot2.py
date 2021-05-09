@@ -107,14 +107,30 @@ velArr4 = []
 mods = [mod1,mod2,mod3,mod4]
 
 # Control related variables
-k = 10 # Proportional constant
+k_p = 10 # Proportional constant
+k_i = 0.5 # Integral constant
+k_d = 0.01 # Differential constant
 # goal_vel_x = [0,0,0,0] # Velocity goal of each wheel
-goal_vel_x = [50,50,50,50] # Velocity goal of each wheel
-goal_pos_y = [0,0,0,0] # Position goal of each wheel
+goal_vel_x = [25,25,25,25] # Velocity goal of each wheel
+goal_pos_y = [1,-1,1,-1] # Position goal of each wheel
+# goal_pos_y = [0,0,0,0] # Velocity goal of each wheel
 lastControlTime = 0
 # target_vel = (50,10,0)
 # turns = 1
-while 1:
+control_x_prev = [0,0,0,0]
+# control_y_prev = [0,0,0,0]
+control_y_prev = [1,-1,1,-1]
+error_x_prev = [0,0,0,0]
+error_y_prev = [0,0,0,0]
+time_prev = time.time()
+
+# For velocity plot, goal vel is 25, kp is 10, no kd ki, both x y same k no  multiplier, y vel control,run for 10s, no need different force 12 vs 34
+# For bad disturbance, noise use 3std, kp 10, pos control y, force divide by 5. x P y P
+# For good disturbance, noise 3std, kp 10 kd 0.01, force divide by 3, x P y PD
+
+start_time = time.time()
+store_data_time = time.time()
+while time.time() - start_time < 10:
   try:
     # print(turns)
     # if turns == 0:
@@ -144,36 +160,64 @@ while 1:
     for i in range(4):
       temp,_ = p.getBasePositionAndOrientation(mods[i])
       pos_y.append(temp[1]) # Get index of y position
+      # temp = p.getBaseVelocity(mods[i])
+      # temp = temp[0][1] # Get index of y velocity
+      # pos_y.append(temp)
+
     # print(pos_y)
 
-    # noise
+    # noise. Use noise of 3 for simulation
     for i in range(4):
         p.applyExternalForce(mods[i],-1,[np.random.normal(0, 3),np.random.normal(0, 3),0],[0,0,0],p.LINK_FRAME)
 
     # Apply force: either random noise or control
-    if time.time() - lastControlTime > 0.005: # Control every .1 second
+    if 1==1:#time.time() - lastControlTime > 0.005: # Control every .1 second
       # Velocity control for x axis
       control_x = []
       for i in range(4):
-        control_x.append(-(vel_x[i] - goal_vel_x[i]) * k)
+        error = vel_x[i] - goal_vel_x[i]
+        P = k_p * error
+        I = control_x_prev[i] + k_i * error * (time.time() - time_prev)
+        D = k_d * (error - error_x_prev[i]) / (time.time() - time_prev)
+        control_x.append(- P)
         if control_x[i] > 100:
             control_x[i] = 100
         elif control_x[i] < -100:
             control_x[i] = -100
+        control_x_prev[i] = control_x[i]
+        error_x_prev[i] = error
     #   print(control_x)
 
       # Position control for y axis
       control_y = []
       for i in range(4):
-        control_y.append(-(pos_y[i] - goal_pos_y[i])*k)
+        error = pos_y[i] - goal_pos_y[i]
+        P = k_p * error
+        I = control_y_prev[i] + k_i * error * (time.time() - time_prev)
+        D = k_d * (error - error_y_prev[i]) / (time.time() - time_prev)
+        control_y.append(-P-D)
+        # control_y.append(0)
+        control_y_prev[i] = control_y[i]
+        error_y_prev[i] = error
     #   print(control_y)
+
+      time_prev = time.time()
+
 
       # Apply control as force
       for i in range(4):
         # p.applyExternalForce(mods[i],-1,[control_x[i],control_y[i],0],[0,0,0],p.LINK_FRAME)
 
-        p.applyExternalForce(mods[i],-1,[control_x[i] - control_y[i]/5,0,0],[0,1/4,0],p.LINK_FRAME)
-        p.applyExternalForce(mods[i],-1,[control_x[i] + control_y[i]/5,0,0],[0,-1/4,0],p.LINK_FRAME)
+        p.applyExternalForce(mods[i],-1,[control_x[i] + control_y[i]/3,0,0],[0,-1/4,0],p.LINK_FRAME)
+        p.applyExternalForce(mods[i],-1,[control_x[i] - control_y[i]/3,0,0],[0,1/4,0],p.LINK_FRAME)
+        
+
+        # if i == 1 or i == 2:
+        #   p.applyExternalForce(mods[i],-1,[control_x[i] - control_y[i]/5,0,0],[0,1/4,0],p.LINK_FRAME)
+        #   p.applyExternalForce(mods[i],-1,[control_x[i] + control_y[i]/5,0,0],[0,-1/4,0],p.LINK_FRAME)
+        # else:
+        #   p.applyExternalForce(mods[i],-1,[control_x[i] + control_y[i]/5,0,0],[0,-1/4,0],p.LINK_FRAME)
+        #   p.applyExternalForce(mods[i],-1,[control_x[i] - control_y[i]/5,0,0],[0,1/4,0],p.LINK_FRAME)
       
       lastControlTime = time.time()
 
@@ -220,7 +264,7 @@ while 1:
 
     colors = ['red','green','purple','blue','black']
     fig, (ax1, ax2) = plt.subplots(2)
-    for i in range(5):
+    for i in range(4):
       ax1.plot(masterArr[:,0,i],masterArr[:,1,i],color=colors[i])
       ax1.scatter(masterArr[0,0,i],masterArr[0,1,i],color='black')
     for i in range(4):
@@ -229,3 +273,57 @@ while 1:
     ax2.set(xlabel='time', ylabel='x velocity')
     plt.show()
     raise(EOFError)
+
+
+posArr1 = np.array(posArr1)
+posArr2 = np.array(posArr2)
+posArr3 = np.array(posArr3)
+posArr4 = np.array(posArr4)
+posArr5 = np.array(posArr5)
+
+    # Master array for position
+masterArr = np.zeros([posArr1.shape[0],posArr1.shape[1],5])
+masterArr[:,:,0] = posArr1
+masterArr[:,:,1] = posArr2
+masterArr[:,:,2] = posArr3
+masterArr[:,:,3] = posArr4
+masterArr[:,:,4] = posArr5
+
+    # Master array for velocity in x direction
+masterArr2 = np.zeros([len(velArr1),4])
+masterArr2[:,0] = velArr1
+masterArr2[:,1] = velArr2
+masterArr2[:,2] = velArr3
+masterArr2[:,3] = velArr4
+
+colors = ['red','green','purple','blue','black']
+label = ['limb 1','limb 2','limb 3','limb 4']
+fig, (ax1, ax2) = plt.subplots(2)
+for i in range(4):
+  test = ax1.plot(masterArr[:,0,i],masterArr[:,1,i],color=colors[i], label=label[i])
+  ax1.scatter(masterArr[0,0,i],masterArr[0,1,i],color='black')
+ax1.legend()
+for i in range(4):
+  ax2.plot(np.linspace(1, len(velArr1), num=len(velArr1)), masterArr2[:,i],color=colors[i], label=label[i])
+ax1.set(xlabel='x position (m)', ylabel='y position (m)')
+ax2.set(xlabel='time (s)', ylabel='x velocity (m/s)')
+ax2.legend()
+plt.show()
+# raise(EOFError)
+
+
+# f = plt.figure(1)
+# for i in range(4):
+#   plt.plot(masterArr[:,0,i],masterArr[:,1,i],color=colors[i])
+#   plt.scatter(masterArr[0,0,i],masterArr[0,1,i],color='black')
+# plt.xlabel('x position (m)')
+# plt.ylabel('y position (m)')
+# # plt.set(xlabel='x position (m)', ylabel='y position (m)')
+
+# g = plt.figure(2)
+# for i in range(4):
+#   plt.plot(np.linspace(1, len(velArr1), num=len(velArr1)), masterArr2[:,i],color=colors[i])
+# plt.xlabel('time (s)')
+# plt.ylabel('x velocity (m/s)')
+# # plt.set(xlabel='time (s)', ylabel='x velocity (m/s)')
+# plt.show()
