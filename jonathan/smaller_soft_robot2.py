@@ -10,7 +10,7 @@ physicsClient = p.connect(p.GUI)
 p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD)
 
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
-planeId = p.loadURDF("plane.urdf", [0,0,0])
+planeId = p.loadURDF("plane.urdf", [0,0,0],globalScaling=100)
 p.setGravity(0,0,-10)
 sF = 4
 arm_height = 5./sF
@@ -213,10 +213,10 @@ while time.time() - start_time < 10:
       control_y = []
       for i in range(4):
         error = pos_y[i] - goal_pos_y[i]
-        P = k_p * error*2
+        P = k_p * error*.02
         I = control_y_prev[i] + k_i *1 *error * (time.time() - time_prev)
-        D = k_d * (error - error_y_prev[i])*0 / (time.time() - time_prev)
-        control_y.append(-P-D-I/10)
+        D = k_d * (error - error_y_prev[i])*1 / (time.time() - time_prev)
+        control_y.append(-P-D)
         # control_y.append(0)
         control_y_prev[i] = control_y[i]
         error_y_prev[i] = error
