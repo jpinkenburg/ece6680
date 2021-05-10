@@ -103,11 +103,11 @@ def ctrl_cen(vel):
     for body in [mod1, mod2, mod3, mod4]:
         vel_ctrl(body, vel)
 
-#dels = [0, 0.002, 0.005, 0.01, 0.02, 0.05]
-vels = [15, 17.5, 20, 22.5, 25, 27.5, 30]
+dels = [0, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1]
+#vels = [15, 17.5, 20, 22.5, 25, 27.5, 30]
 minArr = []
 
-for v in vels:
+for d in dels:
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.setGravity(0, 0,-10)
     planeId = p.loadURDF("plane.urdf", [0,0,0])
@@ -203,10 +203,10 @@ for v in vels:
     timeArr = []
 
     mode = "cen" # choose whether to use centralized or decentralized control
-    #target_vel = (20,0,0) # target velocity x,y,z
-    target_vel = (v,0,0) # target velocity x,y,z
+    target_vel = (20,0,0) # target velocity x,y,z
+    #target_vel = (v,0,0) # target velocity x,y,z
 
-    #comm_delay = d
+    comm_delay = d
     start = time.time()
     start_perm = time.time()
     while time.time() - start_perm < 10:
@@ -242,7 +242,7 @@ for v in vels:
     minArr.append(min(distArr))
     p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD)
 
-plt.scatter(vels,minArr,color='black')
-plt.xlabel("velocity (m/s)")
+plt.scatter(dels,minArr,color='black')
+plt.xlabel("communication delay s")
 plt.ylabel("minnimum obstacle distance (m)")
 plt.show()
