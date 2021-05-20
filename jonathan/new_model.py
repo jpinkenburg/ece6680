@@ -4,8 +4,10 @@ import pybullet_data
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from matplotlib.colors import ListedColormap
+from matplotlib import cm
 
-physicsClient = p.connect(p.GUI)
+physicsClient = p.connect(p.DIRECT)
 p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD)
 
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -159,11 +161,14 @@ def runSim(t,kp,ki,kd):
   velArr2 = []
   velArr3 = []
   velArr4 = []
+  bodyPos = []
+  bodyPos.append(p.getBasePositionAndOrientation(bodyId)[0])
   
   q = False
   while time.time() - start_time < t:
     time.sleep(1./100.)
     try:
+      bodyPos.append(p.getBasePositionAndOrientation(bodyId)[0])
     #   if time.time()-start_time < 5:
     #     k_p = 0.2
     #     k_d = 0
@@ -344,7 +349,40 @@ def runSim(t,kp,ki,kd):
   ax2.set(xlabel='time (s)', ylabel='x velocity (m/s)')
   ax2.legend()
   title = str(kp)+"kp_"+str(ki)+"ki_"+str(kd)+"kd.png"
-  plt.savefig(title)
+  #plt.savefig(title)
+  fig2,ax3 = plt.subplots(1,1)
+  N=len(bodyPos)
+  if N % 2 == 0:
+    Ndiv2 = int(N/2)
+    blueMagenta = np.zeros([Ndiv2,4])
+    magentaRed = np.zeros([Ndiv2,4])
+    blueMagenta[:,0] = np.linspace(0,1,Ndiv2)
+    blueMagenta[:,2] = 1
+    magentaRed[:,2] = np.linspace(1,0,Ndiv2)
+    magentaRed[:,0] = 1
+  else:
+    N = N-1
+    Ndiv2 = int(N/2)
+    blueMagenta = np.zeros([Ndiv2,4])
+    magentaRed = np.zeros([Ndiv2+1,4])
+    blueMagenta[:,0] = np.linspace(0,1,Ndiv2)
+    blueMagenta[:,2] = 1
+    magentaRed[:,2] = np.linspace(1,0,Ndiv2+1)
+    magentaRed[:,0] = 1
+    N = N+1
+
+  blueMagenta[:,3] = 1
+  magentaRed[:,3] = 1
+
+  twocolors = np.vstack((blueMagenta,magentaRed))
+  print(np.shape(twocolors))
+  cmap = ListedColormap(twocolors)
+  colors = np.array([[0,x/(len(bodyPos)-1),1] for x in range(len(bodyPos)-1)])
+  for i in range(len(bodyPos)-1):
+    ax3.plot([bodyPos[i][0],bodyPos[i+1][0]],[bodyPos[i][1],bodyPos[i+1][1]],color=twocolors[i,:3],linewidth=2)
+  ax3.set(xlabel='Body X Position', ylabel='Body Y Position')
+  fig2.colorbar(cm.ScalarMappable(cmap=cmap))
+
   plt.show()
   p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD)
 

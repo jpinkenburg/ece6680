@@ -220,7 +220,7 @@ while time.time() - start_time < 20:
 
     # noise. Use noise of 3 for simulation
     for i in range(4):
-        #p.applyExternalForce(mods[i],-1,[np.random.normal(0, 3),np.random.normal(0, 3),0],[0,0,0],p.LINK_FRAME)
+        p.applyExternalForce(mods[i],-1,[np.random.normal(0, 3),np.random.normal(0, 3),0],[0,0,0],p.LINK_FRAME)
         pass
 
     # Apply force: either random noise or control
