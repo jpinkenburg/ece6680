@@ -122,7 +122,7 @@ lastControlTime = 0
 # turns = 1
 control_x_prev = np.array([0,0,0,0])
 # control_y_prev = [0,0,0,0]
-control_y_prev = np.array([1,-1,1,-1])/sF
+control_y_prev = np.array([1,-1,1,-1])*0/sF
 error_x_prev = [0,0,0,0]
 error_y_prev = [0,0,0,0]
 time_prev = time.time()
@@ -137,7 +137,7 @@ def update_goal(t,op=None):
   if op == None:
     return
   elif op == 's':#sinusoidal with const x
-    speed = 3*np.cos(2*np.pi*(t-start_time)/5)*1
+    speed = 15*np.cos(2*np.pi*(t-start_time)/5)*1
     goal_vel_x = [speed,speed,speed,speed]
     goal_pos_y += np.array([1,1,1,1])*0.02
     return
@@ -220,7 +220,7 @@ while time.time() - start_time < 20:
 
     # noise. Use noise of 3 for simulation
     for i in range(4):
-        p.applyExternalForce(mods[i],-1,[np.random.normal(0, 3),np.random.normal(0, 3),0],[0,0,0],p.LINK_FRAME)
+        #p.applyExternalForce(mods[i],-1,[np.random.normal(0, 3),np.random.normal(0, 3),0],[0,0,0],p.LINK_FRAME)
         pass
 
     # Apply force: either random noise or control
@@ -229,8 +229,8 @@ while time.time() - start_time < 20:
       control_x = []
       for i in range(4):
         error = vel_x[i] - goal_vel_x[i]
-        P = k_p * error*1
-        I = control_x_prev[i] + k_i *1* error * (time.time() - time_prev)
+        P = k_p * error
+        I = control_x_prev[i] + k_i * error * (time.time() - time_prev)
         D = k_d *1* (error - error_x_prev[i]) / (time.time() - time_prev)
         if i<2:
           control_x.append(- P)
@@ -245,13 +245,21 @@ while time.time() - start_time < 20:
     #   print(control_x)
 
       # Position control for y axis
+      #turning off position control makes the velocity graphs much nicer, but position of the wheels is horrific
+      position = True
 
       control_y = []
       for i in range(4):
-        error = vel_y[i] - goal_vel_y[i]
-        P = k_p * error
-        I = control_y_prev[i] + k_i *1 *error * (time.time() - time_prev)
-        D = k_d * (error - error_y_prev[i])*1 / (time.time() - time_prev)
+        if not position:
+          error = vel_y[i] - goal_vel_y[i]
+          [kpy,kiy,kdy] = [0.5,1,1]
+        else:
+          error = pos_y[i]-goal_pos_y[i]
+          [kpy,kiy,kdy] = [500,1,1]
+        print(error)
+        P = k_p * error * 0.5 *kpy
+        I = control_y_prev[i] + k_i *1 *error * (time.time() - time_prev)*kiy
+        D = k_d * (error - error_y_prev[i])*1 / (time.time() - time_prev)*kdy
         control_y.append(-P-D)
         control_y_prev[i] = -control_y[i]
         error_y_prev[i] = error
@@ -277,8 +285,11 @@ while time.time() - start_time < 20:
       for i in range(4):
         # p.applyExternalForce(mods[i],-1,[control_x[i],control_y[i],0],[0,0,0],p.LINK_FRAME)
 
-        p.applyExternalForce(mods[i],-1,np.array([control_x[i] + control_y[i]/3,0,0])/2,[0,-1/4,0],p.LINK_FRAME)
-        p.applyExternalForce(mods[i],-1,np.array([control_x[i] - control_y[i]/3,0,0])/2,[0,1/4,0],p.LINK_FRAME)
+        #p.applyExternalForce(mods[i],-1,np.array([control_x[i] + control_y[i]/3,0,0])/2,[0,-1/4,0],p.LINK_FRAME)
+        #p.applyExternalForce(mods[i],-1,np.array([control_x[i] - control_y[i]/3,0,0])/2,[0,1/4,0],p.LINK_FRAME)
+        p.applyExternalForce(mods[i],-1,np.array([control_x[i] + control_y[i],0,0])/2,[0,-1/4,0],p.LINK_FRAME)
+        p.applyExternalForce(mods[i],-1,np.array([control_x[i] - control_y[i],0,0])/2,[0,1/4,0],p.LINK_FRAME)
+        
         pass
         
 
