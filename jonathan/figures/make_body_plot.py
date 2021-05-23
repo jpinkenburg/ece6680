@@ -24,7 +24,7 @@ def make_plot(pos,startTime,endTime,startColor=np.array([1,0,0,1]),endColor=np.a
 
 def make_graded_limb_plot(limbPos,limbVels,startTime,endTime):
     #plt.style.use('dark_background')
-    #fig,(ax1,ax2) = plt.subplots(2) #for position and velocity plots
+    fig,(ax1,ax2) = plt.subplots(2) #for position and velocity plots
     N = len(limbPos)
     c = np.ones([4,N,4])
     startColors = np.zeros([4,4])
@@ -45,11 +45,17 @@ def make_graded_limb_plot(limbPos,limbVels,startTime,endTime):
             c[i,j,:3] = np.array(colorsys.hsv_to_rgb(hues[i],min(1.6-sList[j],1),sList[j]))
         cmaps.append(ListedColormap(c[i,:,:]))
     #turn into colormaps
+
+    cmaps[0] = make_colormap([1,0,0],[1,1,0],N)
+    cmaps[1] = make_colormap([1,0,1],[0,0,1],N)
+    cmaps[2] = make_colormap([0,1,0],[1,0,0],N)
+    cmaps[3] = make_colormap([0,0,1],[0,1,0],N)
+    for i in range(3):
+        cmaps[i+1] = cmaps[0]
     #now plot the lines
     print(c.shape)
     print(limbPos.shape)
     print(limbVels.shape)
-    fig, axs = plt.subplots(2, 1)
     minx = []
     miny = []
     maxx = []
@@ -62,21 +68,26 @@ def make_graded_limb_plot(limbPos,limbVels,startTime,endTime):
         norm = plt.Normalize(0, 20)
         lc = LineCollection(segments, cmap=cmaps[j], norm=norm)
         print(segments.shape)
-        lc.set_array(np.linspace(0,20,999))
+        lc.set_array(np.linspace(0,20,N-1))
         lc.set_linewidth(2)
-        line = axs[0].add_collection(lc)
+        line = ax1.add_collection(lc)
         #fig.colorbar(line, ax=axs[0])
         minx.append(x.min())
         miny.append(y.min())
         maxx.append(x.max())
         maxy.append(y.max())
-    axs[0].set_xlim(min(minx)-0.1*abs(min(minx)-max(maxx)), max(maxx)+0.1*abs(max(maxx)))
-    axs[0].set_ylim(min(miny)-0.1*abs(min(miny)),max(maxy)+0.1*abs(max(maxy)))
+    ax1.set_xlim(min(minx)-0.1*abs(min(minx)-max(maxx)), max(maxx)+0.1*abs(max(maxx)))
+    ax1.set_ylim(min(miny)-0.1*abs(min(miny)),max(maxy)+0.1*abs(max(maxy)))
 
         #for i in range(len(limbPos)-1):
         #    ax1.plot([limbPos[i][0][j],limbPos[i+1][0][j]],[limbPos[i][1][j],limbPos[i+1][1][j]],color=cmaps[j],linewidth=3)
         #    #ax1.scatter(limbPos[i][0][j],limbPos[i][1][j],color=c[j,i,:3],s=0.5)
         #    ax2.plot([limbVels[i][j],limbVels[i+1][j]],[limbVels[i][j],limbVels[i+1][j]],color=c[j,i,:3],linewidth=3)
         
-    return fig
+    return fig,ax1,ax2
     
+def make_colormap(color1,color2,N):
+    twocolor = np.ones([N,4])
+    for i in range(3):
+        twocolor[:,i] = np.linspace(color1[i],color2[i],N)
+    return ListedColormap(twocolor)
