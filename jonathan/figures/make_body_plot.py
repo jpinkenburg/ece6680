@@ -22,9 +22,9 @@ def make_plot(pos,startTime,endTime,startColor=np.array([1,0,0,1]),endColor=np.a
     #fig.colorbar(cm.ScalarMappable(norm=cl.Normalize(vmin=0,vmax=20),cmap=cmap))
     return fig,ax
 
-def make_graded_limb_plot(limbPos,limbVels,startTime,endTime):
+def make_graded_limb_plot(limbPos,limbVels,startTime,endTime,title1="",title2=""):
     #plt.style.use('dark_background')
-    fig,(ax1,ax2) = plt.subplots(2) #for position and velocity plots
+    fig,ax1 = plt.subplots(1,1) #for position plot
     N = len(limbPos)
     c = np.ones([4,N,4])
     startColors = np.zeros([4,4])
@@ -46,7 +46,7 @@ def make_graded_limb_plot(limbPos,limbVels,startTime,endTime):
         cmaps.append(ListedColormap(c[i,:,:]))
     #turn into colormaps
 
-    cmaps[0] = make_colormap([1,0,0],[1,1,0],N)
+    cmaps[0] = make_colormap([1,0,1],[0,1,1],N)
     cmaps[1] = make_colormap([1,0,1],[0,0,1],N)
     cmaps[2] = make_colormap([0,1,0],[1,0,0],N)
     cmaps[3] = make_colormap([0,0,1],[0,1,0],N)
@@ -60,6 +60,7 @@ def make_graded_limb_plot(limbPos,limbVels,startTime,endTime):
     miny = []
     maxx = []
     maxy = []
+    line  = None
     for j in range(4): 
         x = limbPos[:,0,j]
         y = limbPos[:,1,j]
@@ -78,12 +79,31 @@ def make_graded_limb_plot(limbPos,limbVels,startTime,endTime):
         maxy.append(y.max())
     ax1.set_xlim(min(minx)-0.1*abs(min(minx)-max(maxx)), max(maxx)+0.1*abs(max(maxx)))
     ax1.set_ylim(min(miny)-0.1*abs(min(miny)),max(maxy)+0.1*abs(max(maxy)))
+    ax1.set(xlabel='World x position (m)', ylabel='World y position (m)',title=title1)
+    colors = ['red','green','orange','blue']
 
-        #for i in range(len(limbPos)-1):
-        #    ax1.plot([limbPos[i][0][j],limbPos[i+1][0][j]],[limbPos[i][1][j],limbPos[i+1][1][j]],color=cmaps[j],linewidth=3)
-        #    #ax1.scatter(limbPos[i][0][j],limbPos[i][1][j],color=c[j,i,:3],s=0.5)
-        #    ax2.plot([limbVels[i][j],limbVels[i+1][j]],[limbVels[i][j],limbVels[i+1][j]],color=c[j,i,:3],linewidth=3)
-        
+    #plot some dots
+    Q = len(limbPos)-1
+    numPts = 8
+    linearr = []
+    for i in range(4):
+        for j in range(numPts+1):
+            point = int(np.floor(j*Q/numPts))
+            p = ax1.scatter(limbPos[point,0,i],limbPos[point,1,i],color=colors[i],s=15)
+            if j==0:
+                linearr.append(p)
+    cbar = plt.colorbar(cm.ScalarMappable(norm=cl.Normalize(vmin=startTime,vmax=endTime),cmap=cmaps[0]))
+    cbar.ax.get_yaxis().labelpad = 15
+    cbar.ax.set_ylabel('time (s)', rotation=270)
+    ax1.legend(linearr,['limb 1','limb 2','limb 3','limb 4'])
+
+    fig2,ax2 = plt.subplots(1,1) #for velocity plot
+    times = np.linspace(startTime,endTime,len(limbVels))
+    linearr = []
+    for i in range(4):
+        linearr.append(ax2.plot(times,limbVels[:,i],color=colors[i])[0])
+    ax2.set(xlabel='Time (s)', ylabel='X Velocity (m/s)',title=title2)
+    ax2.legend(linearr,['limb 1','limb 2','limb 3','limb 4'])
     return fig,ax1,ax2
     
 def make_colormap(color1,color2,N):

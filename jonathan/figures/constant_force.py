@@ -182,8 +182,11 @@ if len(sys.argv) > 3:
   k_d = float(sys.argv[3])
   save=False
   
-endTime = 10
-while time.time() - start_time < endTime:
+endtime = 8
+numits = 0
+while numits < 240*endtime:
+  numits += 1
+  print(numits)
   for i in range(4):
     p.applyExternalForce(mods[i],-1,np.array([10,0,0]),[0,0,0],p.LINK_FRAME)
     vel_x[i] = p.getBaseVelocity(mods[i])[0][0]
@@ -244,8 +247,8 @@ ax2.legend()
 '''
 np.save("limbPos.npy",masterArr)
 np.save("limbVels.npy",masterArr2)
-fig,ax1,ax2 = m.make_graded_limb_plot(masterArr,masterArr2,0,20)
-fig2,ax3 = m.make_plot(posArr5,0,endTime)
+fig,ax1,ax2 = m.make_graded_limb_plot(masterArr,masterArr2,0,endtime,"Limb Position: Constant Force","Limb X Velocities vs Time: Constant Force")
+fig2,ax3 = m.make_plot(posArr5,0,endtime)
 if save:
   title=argv[1]+'kp_'+argv[2]+'ki_'+argv[3]+'kd.png'
   plt.savefig(title)

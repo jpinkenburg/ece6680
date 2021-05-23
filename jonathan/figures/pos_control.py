@@ -7,36 +7,38 @@ import time
 import sys
 import make_body_plot as m
 
-physicsClient = p.connect(p.GUI)
+physicsClient = p.connect(p.DIRECT)
 p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD)
 
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 planeId = p.loadURDF("plane.urdf", [0,0,0],globalScaling=100)
 p.setGravity(0,0,-10)
-sF = 4
-arm_height = 5./sF
-arm_width = 1./sF
-arm_length = 4./sF
-body_height = 1./sF
-body_width = 3./sF
-body_length = 4./sF
+sF = 1.2
+arm_height = 0.2*2
+arm_width = 0.1/sF
+arm_length = 0.4/sF
+body_height = 0.1*2
+body_width = .3/sF
+body_length = .4/sF
 
 # create bodies
-mod1 = p.loadURDF("cube_small.urdf",[body_length/2+arm_width+arm_length+0.25,body_width/2-arm_width/2,arm_height/2],globalScaling=5./sF)
+mod1 = p.loadURDF("cube_small.urdf",[body_length/2+arm_width+arm_length+0.07,body_width/2-arm_width/2,arm_height/2],globalScaling=1./sF)
 p.changeVisualShape(mod1,-1,rgbaColor=[1,0,0,1])
-mod2 = p.loadURDF("cube_small.urdf",[body_length/2+arm_width+arm_length+0.25,-body_width/2+arm_width/2,arm_height/2],globalScaling=5./sF)
+mod2 = p.loadURDF("cube_small.urdf",[body_length/2+arm_width+arm_length+0.07,-body_width/2+arm_width/2,arm_height/2],globalScaling=1./sF)
 p.changeVisualShape(mod2,-1,rgbaColor=[0,1,0,1])
-mod3 = p.loadURDF("cube_small.urdf",[-arm_length-body_length/2-arm_width/2-0.75,body_width/2-arm_width/2,arm_height/2],globalScaling=5./sF)
+mod3 = p.loadURDF("cube_small.urdf",[-arm_length-body_length/2-arm_width/2-0.10,body_width/2-arm_width/2,arm_height/2],globalScaling=1./sF)
 p.changeVisualShape(mod3,-1,rgbaColor=[1,0,1,1])
-mod4 = p.loadURDF("cube_small.urdf",[-arm_length-body_length/2-arm_width/2-0.75,-body_width/2+arm_width/2,arm_height/2],globalScaling=5./sF)
+mod4 = p.loadURDF("cube_small.urdf",[-arm_length-body_length/2-arm_width/2-0.10,-body_width/2+arm_width/2,arm_height/2],globalScaling=1./sF)
 p.changeVisualShape(mod4,-1,rgbaColor=[0,0,1,1])
 
-corrFac = 0.05/2
-bodyId = p.loadURDF("body.urdf", [0,0,arm_height/2],globalScaling=1./sF)
-armId1 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.1/sF, mass = 1./sF, useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId2 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.1/sF, mass = 1./sF, useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId3 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.1/sF, mass = 1./sF, useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId4 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.1/sF, mass = 1./sF, useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
+
+corrFac = 0.02
+bodyId = p.loadURDF("body.urdf", [0,0,body_height],globalScaling=0.1/sF)
+
+armId1 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.01/sF, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
+armId2 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.01/sF, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 0, useSelfCollision = 1, frictionCoeff = 0.1, useFaceContact=1)
+armId3 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.01/sF, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
+armId4 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.01/sF, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
 
 p.changeVisualShape(bodyId,-1,rgbaColor=[160/255,69/255,19/255,1])
 p.changeVisualShape(armId1,-1,rgbaColor=[0,0,0,0.8])
@@ -158,16 +160,28 @@ if len(sys.argv) > 3:
   k_d = float(sys.argv[3])
   save=False
   
-endTime = 10
-c=10
-p.setRealTimeSimulation(1)
+endTime = 20
+kp = 2
+ki = 0
+kd = 0.1
+prevErr = np.zeros(3)
+interr = np.zeros(3)
+p.setTimeStep(1/100.)
 while time.time() - start_time < endTime:
   for i in range(4):
     curPos = p.getBasePositionAndOrientation(mods[i])[0]
     err = desPos[i,:] - curPos
-    p.applyExternalForce(mods[i],-1,c*err,[0,0,0],p.LINK_FRAME)
-    desPos[i,:] += np.array([0.01 + 10])
+    force = np.zeros(3)
+    force += kp*err
+    force += kd*(err-prevErr)
+    interr += err
+    force += ki*interr
+    prevErr = err
+    p.applyExternalForce(mods[i],-1,force,[0,0,0],p.LINK_FRAME)
+    desPos[i,:] += np.array([0.01,0,0])*25
     time.sleep(1/100.)
+    p.stepSimulation()
+    vel_x[i] = p.getBaseVelocity(mods[i])[0][0]
 
 
   # Store
@@ -215,7 +229,8 @@ np.save("limbPos.npy",masterArr)
 np.save("limbVels.npy",masterArr2)
 #fig,ax1,ax2 = m.make_graded_limb_plot(masterArr,masterArr2,0,20)
 #fig2,ax3 = m.make_plot(posArr5,0,endTime)
-plt.plot(masterArr[:,0,0],masterArr[:,0,0],color='blue')
+m.make_graded_limb_plot(masterArr,masterArr2,0,20)
+#plt.plot(masterArr[:,0,0],masterArr[:,0,0],color='blue')
 if save:
   title=argv[1]+'kp_'+argv[2]+'ki_'+argv[3]+'kd.png'
   plt.savefig(title)
