@@ -12,30 +12,32 @@ p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 planeId = p.loadURDF("plane.urdf", [0,0,0],globalScaling=100)
 p.setGravity(0,0,-10)
-sF = 4
-arm_height = 5./sF
-arm_width = 1./sF
-arm_length = 4./sF
-body_height = 1./sF
-body_width = 3./sF
-body_length = 4./sF
+sF = 1.2
+arm_height = 0.2*2
+arm_width = 0.1/sF
+arm_length = 0.4/sF
+body_height = 0.1*2
+body_width = .3/sF
+body_length = .4/sF
 
 # create bodies
-mod1 = p.loadURDF("cube_small.urdf",[body_length/2+arm_width+arm_length+0.25,body_width/2-arm_width/2,arm_height/2],globalScaling=5./sF)
+mod1 = p.loadURDF("cube_small.urdf",[body_length/2+arm_width+arm_length+0.07,body_width/2-arm_width/2,arm_height/2],globalScaling=1./sF)
 p.changeVisualShape(mod1,-1,rgbaColor=[1,0,0,1])
-mod2 = p.loadURDF("cube_small.urdf",[body_length/2+arm_width+arm_length+0.25,-body_width/2+arm_width/2,arm_height/2],globalScaling=5./sF)
+mod2 = p.loadURDF("cube_small.urdf",[body_length/2+arm_width+arm_length+0.07,-body_width/2+arm_width/2,arm_height/2],globalScaling=1./sF)
 p.changeVisualShape(mod2,-1,rgbaColor=[0,1,0,1])
-mod3 = p.loadURDF("cube_small.urdf",[-arm_length-body_length/2-arm_width/2-0.75,body_width/2-arm_width/2,arm_height/2],globalScaling=5./sF)
+mod3 = p.loadURDF("cube_small.urdf",[-arm_length-body_length/2-arm_width/2-0.10,body_width/2-arm_width/2,arm_height/2],globalScaling=1./sF)
 p.changeVisualShape(mod3,-1,rgbaColor=[1,0,1,1])
-mod4 = p.loadURDF("cube_small.urdf",[-arm_length-body_length/2-arm_width/2-0.75,-body_width/2+arm_width/2,arm_height/2],globalScaling=5./sF)
+mod4 = p.loadURDF("cube_small.urdf",[-arm_length-body_length/2-arm_width/2-0.10,-body_width/2+arm_width/2,arm_height/2],globalScaling=1./sF)
 p.changeVisualShape(mod4,-1,rgbaColor=[0,0,1,1])
 
-corrFac = 0.05/2
-bodyId = p.loadURDF("body.urdf", [0,0,arm_height/2],globalScaling=1./sF)
-armId1 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.1/sF, mass = 1./sF, useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId2 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.1/sF, mass = 1./sF, useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId3 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.1/sF, mass = 1./sF, useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
-armId4 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.1/sF, mass = 1./sF, useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
+
+corrFac = 0.02
+bodyId = p.loadURDF("body.urdf", [0,0,body_height],globalScaling=0.1/sF)
+
+armId1 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.01/sF, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
+armId2 = p.loadSoftBody("arm_hori.obj", basePosition = [body_length/2+arm_width/2+corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.01/sF, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 0, useSelfCollision = 1, frictionCoeff = 0.1, useFaceContact=1)
+armId3 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,body_width/2-arm_width/2,arm_height/2], scale = 0.01/sF, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
+armId4 = p.loadSoftBody("arm_hori.obj", basePosition = [-arm_length-body_length/2-arm_width/2-corrFac,-body_width/2+arm_width/2,arm_height/2], scale = 0.01/sF, mass = 1., useNeoHookean = 1, useBendingSprings=1, useMassSpring=1, springElasticStiffness=121, springDampingStiffness=1, springDampingAllDirections = 1, useSelfCollision = 1, frictionCoeff = 0, useFaceContact=1)
 
 p.changeVisualShape(bodyId,-1,rgbaColor=[160/255,69/255,19/255,1])
 p.changeVisualShape(armId1,-1,rgbaColor=[0,0,0,0.8])
@@ -114,7 +116,7 @@ k_i = 0.5 # Integral constant
 k_d = 0.01 # Differential constant
 # goal_vel_x = [0,0,0,0] # Velocity goal of each wheel
 goal_vel_x = np.array([25,25,25,25])*4/25 # Velocity goal of each wheel
-goal_pos_y = np.array([1.,-1.,1.,-1.])/sF # Position goal of each wheel
+goal_pos_y = np.array([1.,-1.,1.,-1.])*2/sF # Position goal of each wheel
 goal_vel_y = np.array([1,1,1,1])*0
 # goal_pos_y = [0,0,0,0] # Velocity goal of each wheel
 lastControlTime = 0
@@ -127,13 +129,16 @@ error_x_prev = [0,0,0,0]
 error_y_prev = [0,0,0,0]
 time_prev = time.time()
 argv = sys.argv
+desiredloc = [np.zeros(3)]
+desfront = [np.zeros(3)]
+desback = [np.zeros(3)]
 
 # For velocity plot, goal vel is 25, kp is 10, no kd ki, both x y same k no  multiplier, y vel control,run for 10s, no need different force 12 vs 34
 # For bad disturbance, noise use 3std, kp 10, pos control y, force divide by 5. x P y P
 # For good disturbance, noise 3std, kp 10 kd 0.01, force divide by 3, x P y PD
 
 def update_goal(t,op=None):
-  global goal_vel_x,start_time,goal_pos_y
+  global goal_vel_x,start_time,goal_pos_y,goal_vel_y,desiredloc
   if op == None:
     return
   elif op == 's':#sinusoidal with const x
@@ -159,6 +164,16 @@ def update_goal(t,op=None):
       goal_pos_y += np.array([1,1,1,1])*0.01
       goal_vel_x = np.zeros(4)
     print(goal_pos_y)
+  elif op == 'jank':
+    #t=t-start_time
+    if t > 3 and t < 5:
+      r = 4
+      xspeed = -r*np.pi*np.sin(np.pi*(t-3)/4 - np.pi/2)/4
+      yspeed = r*np.pi*np.cos(np.pi*(t-3)/4-np.pi/2)/4
+      goal_vel_x = [xspeed,xspeed,xspeed,xspeed]
+      goal_vel_y = [yspeed,yspeed,yspeed,yspeed]
+
+
 
 
     
@@ -178,8 +193,11 @@ if len(sys.argv) > 3:
   k_i = float(sys.argv[2])
   k_d = float(sys.argv[3])
   save=False
-  
-while time.time() - start_time < 20:
+
+t = 0
+numits = 0
+endtime = 10
+while numits < 240*endtime:
   try:
     # print(turns)
     # if turns == 0:
@@ -217,6 +235,18 @@ while time.time() - start_time < 20:
       # pos_y.append(temp)
 
     # print(pos_y)
+    # Store
+    pos1,ort = p.getBasePositionAndOrientation(mod1)
+    pos2,ort = p.getBasePositionAndOrientation(mod2)
+    pos3,ort = p.getBasePositionAndOrientation(mod3)
+    pos4,ort = p.getBasePositionAndOrientation(mod4)
+    pos5,ort = p.getBasePositionAndOrientation(bodyId)
+    posArr1.append(pos1)
+    posArr2.append(pos2)
+    posArr3.append(pos3)
+    posArr4.append(pos4)
+    posArr5.append(pos5)
+
 
     # noise. Use noise of 3 for simulation
     for i in range(4):
@@ -246,21 +276,29 @@ while time.time() - start_time < 20:
 
       # Position control for y axis
       #turning off position control makes the velocity graphs much nicer, but position of the wheels is horrific
-      position = True
+      position = False
 
       control_y = []
       for i in range(4):
         if not position:
           error = vel_y[i] - goal_vel_y[i]
           [kpy,kiy,kdy] = [0.5,1,1]
+          #[0.5,1,1] works pretty well actually!
         else:
-          error = pos_y[i]-goal_pos_y[i]
-          [kpy,kiy,kdy] = [500,1,1]
-        print(error)
+          if i == 1:
+            error = pos_y[i]-desiredloc[-1][1]+posArr1[0][1]
+          elif i==2:
+            error = pos_y[i]-desiredloc[-1][1]+posArr2[0][1]
+          elif i==3:
+            error = pos_y[i]-desiredloc[-1][1]+posArr3[0][1]
+          else:
+            error = pos_y[i]-desiredloc[-1][1]+posArr4[0][1]
+          [kpy,kiy,kdy] = [10,1,0]
         P = k_p * error * 0.5 *kpy
-        I = control_y_prev[i] + k_i *1 *error * (time.time() - time_prev)*kiy
-        D = k_d * (error - error_y_prev[i])*1 / (time.time() - time_prev)*kdy
+        I = control_y_prev[i] + k_i *1 *error *kiy/240
+        D = k_d * (error - error_y_prev[i])*1 / (1/240)*kdy
         control_y.append(-P-D)
+        print(error)
         control_y_prev[i] = -control_y[i]
         error_y_prev[i] = error
 
@@ -301,25 +339,24 @@ while time.time() - start_time < 20:
         #   p.applyExternalForce(mods[i],-1,[control_x[i] - control_y[i]/5,0,0],[0,1/4,0],p.LINK_FRAME)
       
       lastControlTime = time.time()
-      update_goal(time_prev,'s')
+      t += 1/240
+      if t > 25 and t < 15:
+        goal_vel_y = [1,1,1,1]
+        desiredloc.append(desiredloc[-1]+np.array([4,1,0])/240)
+      else:
+        desiredloc.append(desiredloc[-1]+np.array([4,0,0])/240)
+      '''if t%5 <= 0.00001 or t%5 >= 4.999:
+        if goal_vel_y[0] == 0:
+          goal_vel_y = np.ones(4)*np.pi
+        else:
+          goal_vel_y *= 0'''
+      #update_goal(t,'jank')
+      #print(goal_vel_y,t)
 
-
-    # Store
-    pos1,ort = p.getBasePositionAndOrientation(mod1)
-    pos2,ort = p.getBasePositionAndOrientation(mod2)
-    pos3,ort = p.getBasePositionAndOrientation(mod3)
-    pos4,ort = p.getBasePositionAndOrientation(mod4)
-    pos5,ort = p.getBasePositionAndOrientation(bodyId)
-    posArr1.append(pos1)
-    posArr2.append(pos2)
-    posArr3.append(pos3)
-    posArr4.append(pos4)
-    posArr5.append(pos5)
-
-    velArr1.append(vel_x[0])
-    velArr2.append(vel_x[1])
-    velArr3.append(vel_x[2])
-    velArr4.append(vel_x[3])
+    velArr1.append(vel_y[0])
+    velArr2.append(vel_y[1])
+    velArr3.append(vel_y[2])
+    velArr4.append(vel_y[3])
     p.stepSimulation()
 
   except(KeyboardInterrupt):
@@ -346,10 +383,13 @@ while time.time() - start_time < 20:
 
     colors = ['red','green','purple','blue','black']
     fig, (ax1, ax2) = plt.subplots(2)
-    for i in range(4):
+    for i in range(1):
       ax1.plot(masterArr[:,0,i],masterArr[:,1,i],color=colors[i])
       ax1.scatter(masterArr[0,0,i],masterArr[0,1,i],color='black')
-    for i in range(4):
+      desiredloc = np.array(desiredloc)
+      ax1.plot(desiredloc[:,0],desiredloc[:,1],color='black')
+      print(desiredloc)
+    for i in range(1):
       ax2.plot(np.linspace(1, len(velArr1), num=len(velArr1)), masterArr2[:,i],color=colors[i])
     ax1.set(xlabel='x', ylabel='y')
     ax2.set(xlabel='time', ylabel='x velocity')
@@ -385,7 +425,7 @@ masterArr2[:,3] = velArr4
 colors = ['red','green','purple','blue','black']
 label = ['limb 1','limb 2','limb 3','limb 4']
 fig, (ax1, ax2) = plt.subplots(2)
-for i in range(4):
+for i in range(1):
   test = ax1.plot(masterArr[:,0,i],masterArr[:,1,i],color=colors[i], label=label[i])
   ax1.scatter(masterArr[0,0,i],masterArr[0,1,i],color='black')
 ax1.legend()
